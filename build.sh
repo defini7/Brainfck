@@ -1,3 +1,3 @@
 #!/bin/bash
 
-gcc main.c -o bin/bf.exe
+gcc main.c -o bin/bf

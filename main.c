@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 size_t read_file(const char *filename, char **buffer)
 {
@@ -66,7 +67,7 @@ void write_body(FILE* file, char* input, size_t length)
     write(file, "return 0;}");
 }
 
-void interpret(char* input, size_t length)
+void simulate(char* input, size_t length)
 {
     int stack[30000];
     memset(stack, 0, sizeof(stack));
@@ -129,8 +130,14 @@ void interpret(char* input, size_t length)
 
 void compile(char* input, size_t length)
 {
-    FILE *output = fopen("build/output.c", "wb");
+    FILE *output = fopen("./build/output.c", "wb");
 
+    if (output == NULL)
+    {
+        fprintf(stderr, "[Brainf*ck] Can't open ./build/output.c file!\n");
+        return;
+    }
+    
     printf("[Brainf*ck] Generating C file...\n");
 
     write_header(output);
@@ -145,7 +152,17 @@ void compile(char* input, size_t length)
 
 void run()
 {
-    system("build\\\\output");
+#ifdef _WIN32
+    system("build\\output");
+#else
+    system("./build/output");
+#endif
+}
+
+void usage()
+{
+    fprintf(stdout, "[Brainf*ck] Usage: ./bf <mode> <file>\n");
+    fprintf(stdout, "[Brainf*ck] Modes: simulate, compile\n");
 }
 
 #define STREQUAL(s1, s2) (strcmp(s1, s2) == 0)
@@ -154,7 +171,7 @@ int main(int argc, char *argv[])
 {
     if (argc < 2)
     {
-        fprintf(stderr, "[Brainf*ck] Please provide mode (interpret/compile/run)\n");
+        usage();
         return 1;
     }
 
@@ -164,7 +181,7 @@ int main(int argc, char *argv[])
     {
         if (argc == 2)
         {
-            fprintf(stderr, "[Brainf*ck] Please provide filename\n");
+            usage();
             return 1;
         }
 
@@ -176,8 +193,8 @@ int main(int argc, char *argv[])
 
         printf("[Brainf*ck] Total characters: %d\n", input_length);
 
-        if (STREQUAL(argv[1], "interpret"))
-            interpret(input, input_length);
+        if (STREQUAL(argv[1], "simulate"))
+            simulate(input, input_length);
         else if (STREQUAL(argv[1], "compile"))
             compile(input, input_length);
         else
